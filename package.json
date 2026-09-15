@@ -1,0 +1,14 @@
+{
+  "name": "codeclash",
+  "version": "1.0.0",
+  "description": "Head-to-head competitive coding rooms -- Java & C++, no profiles, just a winner and a loser.",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  }
+}

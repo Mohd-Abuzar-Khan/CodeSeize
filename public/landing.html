@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CodeClash — Race your code, not your resume</title>
+<meta name="description" content="Minimal real-time competitive coding platform. Create or join a room, race an opponent through test cases in Java or C++. No profiles, no setup." />
+
+<!-- Typography: Manrope for marketing/UI, JetBrains Mono for code & stats -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" />
+
+<style>
+/* ═══════════════════════════════════════════════════════
+   TOKENS & DESIGN SYSTEM
+═══════════════════════════════════════════════════════ */
+:root {
+  /* Deep indigo/navy ground (#0B0E1A – #151A33) */
+  --bg-deep:      #0B0E1A;
+  --bg-mid:       #0F1324;
+  --bg-lift:      #151A33;
+
+  /* Glass & border tokens */
+  --glass-bg:     rgba(255, 255, 255, 0.024);
+  --glass-card:   rgba(13, 17, 34, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-hover:  rgba(255, 255, 255, 0.12);
+
+  /* Typography colors */
+  --text-hi:      #EFF0FA; /* warm off-white */
+  --text-mid:     #8E95B8; /* muted slate */
+  --text-low:     #494F6B; /* understated label tone */
+
+  /* Pass / Fail accents matching the IDE */
+  --mint:         #4EC99A; /* IDE pass accent */
+  --mint-dark:    #052317; /* contrast label on mint */
+  --coral:        #E0614A; /* IDE fail accent */
+
+  /* Fonts */
+  --sans:         'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mono:         'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Layout */
+  --max-w:        1140px;
+  --gutter:       clamp(24px, 5vw, 72px);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BASE & FILM-GRAIN TEXTURE
+═══════════════════════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-deep);
+}
+
+body {
+  background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 42%, var(--bg-lift) 100%);
+  color: var(--text-hi);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Static film-grain overlay: never flat, never glossy, strictly non-busy */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.032;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23grain)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+header, main, footer {
+  position: relative;
+  z-index: 1;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MICRO-LABELS & TYPOGRAPHIC UTILITIES
+═══════════════════════════════════════════════════════ */
+/* Editorial masthead style: uppercase, wide letter-spacing */
+.masthead-label {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-low);
+  line-height: 1;
+  display: inline-block;
+}
+
+.section-wrap {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION 1 — HEADER
+═══════════════════════════════════════════════════════ */
+header {
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 var(--gutter);
+  position: sticky;
+  top: 0;
+  background: rgba(11, 14, 26, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 50;
+}
+
+.header-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+/* Logo mark + wordmark: understated warm off-white */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text-hi);
+  transition: opacity 0.15s;
+}
+
+.logo:hover {
+  opacity: 0.88;
+}
+
+.logo-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Thin nav top-right */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-link {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-low);
+  transition: color 0.15s ease;
+}
+
+.nav-link:hover {
+  color: var(--text-hi);
+}
+
+/* Exactly one accent in Header: flat mint CTA button, no gradient, no shadow */
+.btn-header-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--mint-dark);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border: none;
+  box-shadow: none;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.btn-header-cta:hover {
+  filter: brightness(1.08);
+}
+
+.btn-header-cta:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 680px) {
+  .nav-menu {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION 2 — HERO
+   Generous negative space (>40%), copy well under 50%
+   Quiet dual-cursor abstract focal element
+═══════════════════════════════════════════════════════ */
+.hero-section {
+  padding: clamp(96px, 14vw, 156px) 0 clamp(84px, 11vw, 136px);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 48px;
+}
+
+@media (max-width: 860px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 56px;
+  }
+}
+
+/* Copy occupies well under half the viewport width */
+.hero-copy {
+  max-width: 480px;
+}
+
+.hero-eyebrow {
+  margin-bottom: 24px;
+}
+
+/* One large confident headline per section, left-aligned, generous line-height */
+.hero-title {
+  font-size: clamp(42px, 6vw, 68px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.06;
+  color: var(--text-hi);
+  margin-bottom: 24px;
+}
+
+.hero-subhead {
+  font-size: clamp(15.5px, 1.8vw, 18px);
+  color: var(--text-mid);
+  line-height: 1.62;
+  margin-bottom: 40px;
+  max-width: 42ch;
+  font-weight: 400;
+}
+
+/* Exactly one accent in Hero: flat mint CTA button */
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 30px;
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--mint-dark);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border: none;
+  box-shadow: none;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.hero-cta:hover {
+  filter: brightness(1.08);
+}
+
+.hero-cta:active {
+  transform: scale(0.98);
+}
+
+/* Hero abstract focal element: quiet, small in scale against large dark space */
+.hero-focal-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@media (max-width: 860px) {
+  .hero-focal-wrap {
+    justify-content: flex-start;
+  }
+}
+
+.race-canvas {
+  width: 280px;
+  height: 280px;
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Subtle dashed track */
+.race-canvas::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 14%;
+  bottom: 14%;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 30%,
+    rgba(255, 255, 255, 0.12) 70%,
+    transparent 100%
+  );
+  transform: translateX(-50%);
+}
+
+/* Competing cursors: minimal and restrained */
+.race-cursor {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Left competitor (arjun - leading) */
+.race-cursor-lead {
+  left: 28px;
+  top: 84px;
+}
+
+.cursor-arrow-lead {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 0 6px 11px;
+  border-color: transparent transparent transparent var(--text-hi);
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.3));
+}
+
+.cursor-tag-lead {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-hi);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Right competitor (priya - trailing) */
+.race-cursor-trail {
+  right: 28px;
+  bottom: 84px;
+}
+
+.cursor-tag-trail {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-mid);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cursor-arrow-trail {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 11px 6px 0;
+  border-color: transparent var(--text-mid) transparent transparent;
+}
+
+/* Center match indicator */
+.race-center-badge {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-low);
+  background: var(--bg-deep);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION 3 — HOW IT WORKS
+   Horizontal row of 3 minimal stat-block cards
+═══════════════════════════════════════════════════════ */
+.steps-section {
+  padding: clamp(72px, 10vw, 116px) 0;
+  border-top: 1px solid var(--glass-border);
+}
+
+.section-head {
+  margin-bottom: 56px;
+  max-width: 580px;
+}
+
+.section-head .masthead-label {
+  margin-bottom: 16px;
+}
+
+.section-head h2 {
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--text-hi);
+}
+
+.steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .steps-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+.stat-card {
+  padding: 36px 30px 38px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: var(--glass-bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 220px;
+}
+
+/* Restraint rule: Exactly one accent in How It Works — step 01 label is mint */
+.stat-card:first-child .step-code {
+  color: var(--mint);
+}
+
+.step-code {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-low);
+  margin-bottom: 28px;
+}
+
+.step-headline {
+  font-size: clamp(20px, 2.2vw, 24px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-hi);
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.step-sentence {
+  font-size: 13.5px;
+  color: var(--text-mid);
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION 4 — PRODUCT GLIMPSE / LIVE PROOF
+   Floating glass panel, no browser chrome
+═══════════════════════════════════════════════════════ */
+.glimpse-section {
+  padding: clamp(72px, 10vw, 120px) 0;
+  border-top: 1px solid var(--glass-border);
+}
+
+.ide-panel {
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: var(--glass-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow: hidden;
+  max-width: 960px;
+  margin-top: 12px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+/* Window bar without browser chrome — just subtle indicators */
+.ide-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.ide-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ide-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ide-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-low);
+  letter-spacing: 0.04em;
+}
+
+/* Split view: Code editor left, test cases + leaderboard rail right */
+.ide-grid {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+}
+
+@media (max-width: 720px) {
+  .ide-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Code editor */
+.ide-code {
+  padding: 24px 22px;
+  border-right: 1px solid var(--glass-border);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #9AA3C7;
+  overflow-x: auto;
+}
+
+.ide-code .ln {
+  display: inline-block;
+  min-width: 24px;
+  color: rgba(255, 255, 255, 0.16);
+  user-select: none;
+  font-size: 11px;
+  margin-right: 14px;
+}
+
+/* Subdued syntax highlighting */
+.kw  { color: #8F82FF; } /* keyword */
+.fn  { color: #94BEFF; } /* function / type */
+.str { color: #A6CE86; } /* string */
+.num { color: #E8B84B; } /* number */
+.cm  { color: #434B6B; } /* comment */
+
+/* Rail: Test cases + Leaderboard */
+.ide-rail {
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.rail-section-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-low);
+}
+
+/* Restraint rule: Exactly one accent in this section — the 6/8 score */
+.stat-box {
+  padding: 14px 14px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+}
+
+.stat-box-score {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--mint);
+  line-height: 1;
+}
+
+.stat-box-total {
+  font-size: 13px;
+  color: var(--text-low);
+}
+
+.stat-box-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-low);
+  margin-top: 6px;
+  display: block;
+}
+
+/* Test rows */
+.test-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.015);
+  font-size: 11px;
+}
+
+.test-pill {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.test-pill.pass {
+  background: rgba(78, 201, 154, 0.12);
+  color: var(--mint);
+}
+
+.test-pill.fail {
+  background: rgba(224, 97, 74, 0.12);
+  color: var(--coral);
+}
+
+.test-title {
+  color: var(--text-mid);
+  flex: 1;
+}
+
+.test-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-low);
+}
+
+/* Mini leaderboard */
+.rail-leaderboard {
+  border-top: 1px solid var(--glass-border);
+  padding-top: 12px;
+}
+
+.lb-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 11.5px;
+}
+
+.lb-rank {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-low);
+  width: 14px;
+}
+
+.lb-user {
+  color: var(--text-mid);
+  flex: 1;
+}
+
+.lb-score {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-low);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION 5 — FOOTER
+   Nexiron reference structure: 3 columns + copyright
+   Same muted color family
+═══════════════════════════════════════════════════════ */
+footer {
+  border-top: 1px solid var(--glass-border);
+  padding: clamp(54px, 8vw, 84px) var(--gutter) clamp(36px, 5vw, 48px);
+}
+
+.footer-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px 48px;
+}
+
+@media (max-width: 768px) {
+  .footer-inner {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.footer-brand .logo {
+  margin-bottom: 14px;
+}
+
+.footer-desc {
+  font-size: 13px;
+  color: var(--text-low);
+  line-height: 1.6;
+  max-width: 28ch;
+}
+
+.footer-col-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-low);
+  margin-bottom: 18px;
+  display: block;
+}
+
+.footer-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.footer-links a {
+  font-size: 13px;
+  color: var(--text-low);
+  transition: color 0.15s ease;
+}
+
+.footer-links a:hover {
+  color: var(--text-hi);
+}
+
+.footer-bottom {
+  max-width: var(--max-w);
+  margin: 44px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-copyright {
+  font-size: 11.5px;
+  color: var(--text-low);
+  letter-spacing: 0.02em;
+}
+
+.footer-bottom-nav {
+  display: flex;
+  gap: 20px;
+  list-style: none;
+}
+
+.footer-bottom-nav a {
+  font-size: 11.5px;
+  color: var(--text-low);
+  transition: color 0.15s ease;
+}
+
+.footer-bottom-nav a:hover {
+  color: var(--text-mid);
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 1: HEADER
+══════════════════════════════════════════════════ -->
+<header>
+  <div class="header-inner">
+
+    <!-- Top-left: Minimal logo mark + wordmark -->
+    <a href="/" class="logo" aria-label="CodeClash home">
+      <span class="logo-mark" aria-hidden="true">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 10L10 2M10 2H4M10 2V8" stroke="#EFF0FA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      CodeClash
+    </a>
+
+    <!-- Top-right: Thin nav -->
+    <nav aria-label="Main navigation">
+      <ul class="nav-menu">
+        <li><a href="#how-it-works" class="nav-link">Product</a></li>
+        <li><a href="#glimpse" class="nav-link">Docs</a></li>
+        <li><a href="/index.html" class="nav-link">Sign in</a></li>
+      </ul>
+    </nav>
+
+    <!-- Exactly one accent CTA: flat mint fill, no gradient, no shadow -->
+    <a href="/index.html" class="btn-header-cta" id="nav-cta">
+      Get started
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+        <path d="M1.5 8.5L8.5 1.5M8.5 1.5H3.5M8.5 1.5V6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+
+  </div>
+</header>
+
+
+<!-- ══════════════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════════════ -->
+<main>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 2: HERO
+       Copy < 45% viewport width, >40% negative space
+  ════════════════════════════════════════════════ -->
+  <section class="hero-section" aria-labelledby="hero-title">
+    <div class="section-wrap">
+      <div class="hero-grid">
+
+        <div class="hero-copy">
+          <div class="hero-eyebrow">
+            <span class="masthead-label">Real-time competitive coding</span>
+          </div>
+
+          <h1 class="hero-title" id="hero-title">
+            Race your code,<br />not your resume.
+          </h1>
+
+          <p class="hero-subhead">
+            Create a room, pick Java or C++, and race an opponent through hidden test cases in real time. No accounts, no setup.
+          </p>
+
+          <!-- Exactly one accent in Hero: flat mint CTA button -->
+          <a href="/index.html" class="hero-cta" id="hero-start-match">
+            Start a match
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+              <path d="M2 9L9 2M9 2H4M9 2V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Quiet abstract-geometric focal element: two competing cursors on a split track -->
+        <div class="hero-focal-wrap" aria-hidden="true">
+          <div class="race-canvas">
+
+            <!-- Competitor A cursor (leading) -->
+            <div class="race-cursor race-cursor-lead">
+              <span class="cursor-arrow-lead"></span>
+              <span class="cursor-tag-lead">6/8</span>
+            </div>
+
+            <div class="race-center-badge">vs</div>
+
+            <!-- Competitor B cursor (trailing) -->
+            <div class="race-cursor race-cursor-trail">
+              <span class="cursor-tag-trail">4/8</span>
+              <span class="cursor-arrow-trail"></span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 3: HOW IT WORKS
+       Horizontal row of minimal stat-block cards
+  ════════════════════════════════════════════════ -->
+  <section class="steps-section" id="how-it-works" aria-labelledby="steps-title">
+    <div class="section-wrap">
+
+      <div class="section-head">
+        <span class="masthead-label">How it works</span>
+        <h2 id="steps-title">Three steps to the starting line.</h2>
+      </div>
+
+      <div class="steps-row" role="list">
+
+        <!-- Card 1 (Exactly one accent: step code in mint) -->
+        <div class="stat-card" role="listitem">
+          <div class="step-code">01 — Create a room</div>
+          <div>
+            <h3 class="step-headline">Set the stage</h3>
+            <p class="step-sentence">Choose a problem, configure test cases, and pick a duration. Get a 5-letter code to share.</p>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="stat-card" role="listitem">
+          <div class="step-code">02 — Get a problem</div>
+          <div>
+            <h3 class="step-headline">Read and race</h3>
+            <p class="step-sentence">Both competitors unlock the prompt at the exact same instant the match begins.</p>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="stat-card" role="listitem">
+          <div class="step-code">03 — First to pass wins</div>
+          <div>
+            <h3 class="step-headline">Clear every test</h3>
+            <p class="step-sentence">Submit as many times as you like. First to pass all hidden test cases takes the round.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 4: LIVE PROOF / PRODUCT GLIMPSE
+       Floating glass card, no browser chrome
+  ════════════════════════════════════════════════ -->
+  <section class="glimpse-section" id="glimpse" aria-labelledby="glimpse-title">
+    <div class="section-wrap">
+
+      <div class="section-head">
+        <span class="masthead-label">Live proof</span>
+        <h2 id="glimpse-title">The match interface.</h2>
+      </div>
+
+      <!-- Floating glass IDE panel: no browser chrome -->
+      <div class="ide-panel" role="region" aria-label="CodeClash IDE mockup showing code editor, test case progress, and leaderboard">
+
+        <!-- Subdued window bar -->
+        <div class="ide-bar" aria-hidden="true">
+          <div class="ide-dots">
+            <span class="ide-dot"></span>
+            <span class="ide-dot"></span>
+            <span class="ide-dot"></span>
+          </div>
+          <span class="ide-meta">codeclash · Two Sum · 08:42 remaining</span>
+        </div>
+
+        <div class="ide-grid">
+
+          <!-- Left: Code editor (JetBrains Mono) -->
+          <div class="ide-code" aria-hidden="true">
+<span class="ln">1</span><span class="kw">import</span> java.util.*;
+<span class="ln">2</span>
+<span class="ln">3</span><span class="kw">public class</span> <span class="fn">Main</span> {
+<span class="ln">4</span>  <span class="kw">public static void</span> <span class="fn">main</span>(String[] args) {
+<span class="ln">5</span>    Scanner sc = <span class="kw">new</span> <span class="fn">Scanner</span>(System.in);
+<span class="ln">6</span>    <span class="kw">int</span> n = sc.nextInt();
+<span class="ln">7</span>    <span class="kw">int</span> target = sc.nextInt();
+<span class="ln">8</span>    <span class="kw">int</span>[] nums = <span class="kw">new int</span>[n];
+<span class="ln">9</span>    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+<span class="ln">10</span>      nums[i] = sc.nextInt();
+<span class="ln">11</span>
+<span class="ln">12</span>    Map&lt;Integer, Integer&gt; map = <span class="kw">new</span> <span class="fn">HashMap</span>&lt;&gt;();
+<span class="ln">13</span>    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+<span class="ln">14</span>      <span class="kw">int</span> diff = target - nums[i];
+<span class="ln">15</span>      <span class="kw">if</span> (map.containsKey(diff)) {
+<span class="ln">16</span>        System.out.println(map.get(diff) + <span class="str">" "</span> + i);
+<span class="ln">17</span>        <span class="kw">return</span>;
+<span class="ln">18</span>      }
+<span class="ln">19</span>      map.put(nums[i], i);
+<span class="ln">20</span>    }
+<span class="ln">21</span>  }
+<span class="ln">22</span>}
+          </div>
+
+          <!-- Right: Test cases & Leaderboard rail -->
+          <div class="ide-rail" aria-hidden="true">
+
+            <span class="rail-section-title">Results</span>
+
+            <!-- Stat block: Exactly one accent in Glimpse section (mint score) -->
+            <div class="stat-box">
+              <div>
+                <span class="stat-box-score">6</span>
+                <span class="stat-box-total">/8</span>
+              </div>
+              <span class="stat-box-label">Passed</span>
+            </div>
+
+            <!-- Test cases -->
+            <div class="test-row">
+              <span class="test-pill pass">Passed</span>
+              <span class="test-title">Test 1</span>
+              <span class="test-time">12ms</span>
+            </div>
+            <div class="test-row">
+              <span class="test-pill pass">Passed</span>
+              <span class="test-title">Test 2</span>
+              <span class="test-time">9ms</span>
+            </div>
+            <div class="test-row">
+              <span class="test-pill fail">Failed</span>
+              <span class="test-title">Test 3</span>
+              <span class="test-time">—</span>
+            </div>
+            <div class="test-row">
+              <span class="test-pill pass">Passed</span>
+              <span class="test-title">Test 4</span>
+              <span class="test-time">11ms</span>
+            </div>
+
+            <!-- Leaderboard rail -->
+            <div class="rail-leaderboard">
+              <span class="rail-section-title" style="display:block; margin-bottom: 8px;">Leaderboard</span>
+              <div class="lb-item">
+                <span class="lb-rank">1</span>
+                <span class="lb-user">arjun</span>
+                <span class="lb-score">6/8</span>
+              </div>
+              <div class="lb-item">
+                <span class="lb-rank">2</span>
+                <span class="lb-user">priya</span>
+                <span class="lb-score">4/8</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 5: FOOTER
+     Nexiron reference structure: 3 columns + copyright
+     Muted color family throughout
+══════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+
+    <!-- Column 1: Brand & one-line description -->
+    <div class="footer-brand">
+      <a href="/" class="logo" aria-label="CodeClash home">
+        <span class="logo-mark" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 10L10 2M10 2H4M10 2V8" stroke="#EFF0FA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        CodeClash
+      </a>
+      <p class="footer-desc">
+        Real-time competitive coding. No profiles, no resumes — just code and a clock.
+      </p>
+    </div>
+
+    <!-- Column 2: Product -->
+    <div>
+      <span class="footer-col-title">Product</span>
+      <ul class="footer-links">
+        <li><a href="/index.html">Create room</a></li>
+        <li><a href="/index.html">Join match</a></li>
+        <li><a href="#how-it-works">How it works</a></li>
+      </ul>
+    </div>
+
+    <!-- Column 3: Resources -->
+    <div>
+      <span class="footer-col-title">Resources</span>
+      <ul class="footer-links">
+        <li><a href="#glimpse">Documentation</a></li>
+        <li><a href="#glimpse">Supported languages</a></li>
+        <li><a href="#glimpse">API reference</a></li>
+      </ul>
+    </div>
+
+    <!-- Column 4: Company -->
+    <div>
+      <span class="footer-col-title">Company</span>
+      <ul class="footer-links">
+        <li><a href="#">About</a></li>
+        <li><a href="#">GitHub</a></li>
+        <li><a href="#">Status</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <span class="footer-copyright">© 2026 CodeClash. All rights reserved.</span>
+    <ul class="footer-bottom-nav">
+      <li><a href="#">Privacy</a></li>
+      <li><a href="#">Terms</a></li>
+      <li><a href="#">Security</a></li>
+    </ul>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CodeClash — Competitive Coding IDE</title>
+<meta name="description" content="Real-time head-to-head competitive coding rooms in Java and C++. Race through test cases with live opponent status." />
+
+<!-- Fonts: Manrope for UI, JetBrains Mono for Code -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" />
+
+<!-- CodeMirror for in-editor syntax highlighting and line numbers -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ════════════════════════ TOPBAR ════════════════════════ -->
+  <header class="topbar">
+    <a href="/" class="brand" aria-label="CodeClash home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 10L10 2M10 2H4M10 2V8" stroke="#EFF0FA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      CodeClash
+    </a>
+
+    <div class="topbar-nav">
+      <a href="/" class="topbar-link">Home</a>
+      <a href="/#how-it-works" class="topbar-link">How it works</a>
+      <div class="connection-pill" id="connection-pill">
+        <span class="dot"></span>
+        <span id="connection-text">connecting…</span>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ════════════════════════ HOME VIEW ════════════════════════ -->
+  <section class="view active" id="view-home">
+
+    <div class="hero">
+      <div>
+        <span class="label" style="margin-bottom:16px; display:inline-block;">Competitive Coding · Real-Time</span>
+        <h1>Two coders.<br/>One problem.<br/>First to pass wins.</h1>
+        <p class="lede">Spin up a room, drop in a problem and test cases, share the code — then race to pass every test in Java or C++ before the clock runs out. No accounts, no setup.</p>
+        
+        <div class="hero-stats">
+          <div class="hero-stat"><b>2</b><span>Languages</span></div>
+          <div class="hero-stat"><b>0</b><span>Accounts</span></div>
+          <div class="hero-stat"><b>1</b><span>Winner</span></div>
+        </div>
+      </div>
+
+      <div class="hero-art-quiet" aria-hidden="true">
+        <div class="hero-track-box">
+          <span class="hero-tag-a">6/8 lead</span>
+          <span class="label" style="font-size:9px; z-index:2; background:var(--bg); padding:3px 8px; border-radius:999px; border:1px solid var(--glass-border);">vs</span>
+          <span class="hero-tag-b">4/8</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-row">
+      <!-- Create Room Card -->
+      <div class="action-card">
+        <div class="chip">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 3v12M3 9h12" stroke="#EFF0FA" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="label">Host a match</span>
+        <h3>Create a room</h3>
+        <p>Write or select a problem, configure test cases, and set the match clock. You will receive a 5-letter code to share with your opponent.</p>
+        <button class="btn btn-gold btn-block" id="btn-goto-create">Set up a room</button>
+      </div>
+
+      <!-- Join Room Card -->
+      <div class="action-card">
+        <div class="chip">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M3 9h12M10 4l5 5-5 5" stroke="var(--mint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="label">Direct access</span>
+        <h3>Join a room</h3>
+        <p>Got a code? Drop it in, pick your nickname, and step into the lobby. The match begins the second the host fires the starting gun.</p>
+        <button class="btn btn-mint btn-block" id="btn-goto-join">Enter a code</button>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ════════════════════════ CREATE VIEW ═════════════════════ -->
+  <section class="view" id="view-create">
+    <button class="link-btn" id="btn-create-back">← Back to home</button>
+    <div class="divider"></div>
+
+    <div class="panel" style="max-width:720px; margin:0 auto;">
+      <div style="margin-bottom:24px;">
+        <span class="label">01 — Room setup</span>
+        <h2 style="font-size:26px; font-weight:800; letter-spacing:-0.02em; margin-top:6px;">Set up your match</h2>
+      </div>
+
+      <div class="form-grid">
+        <div>
+          <label class="field-label" for="create-nickname">Your nickname</label>
+          <input class="input" id="create-nickname" maxlength="20" placeholder="e.g. Arjun" autocomplete="off"/>
+        </div>
+
+        <div>
+          <label class="field-label" for="problem-title">Problem title</label>
+          <input class="input" id="problem-title" maxlength="80" placeholder="e.g. Sum of Two Numbers" autocomplete="off"/>
+        </div>
+
+        <div>
+          <label class="field-label" for="problem-description">Problem description</label>
+          <textarea class="textarea" id="problem-description" rows="6" placeholder="Describe the problem statement, constraints, and I/O expectations."></textarea>
+        </div>
+
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <label class="field-label" style="margin-bottom: 0;">Test cases (first test is public sample)</label>
+            <div class="tc-mode-toggle">
+              <button type="button" class="tc-tab active" id="tab-tc-bulk">Quick Paste (input:output;)</button>
+              <button type="button" class="tc-tab" id="tab-tc-manual">Manual rows</button>
+            </div>
+          </div>
+
+          <!-- Quick Paste Area (Default) -->
+          <div id="tc-bulk-pane">
+            <div class="tc-bulk-hint">
+              <span class="mono" style="color: var(--mint); font-weight: 700;">Format: input:output;</span>
+              <span style="color: var(--text-low);">— Use <b>:</b> between input & output, and <b>;</b> at the end of each testcase.</span>
+            </div>
+            <textarea class="textarea mono" id="testcases-bulk" rows="6"
+              placeholder="1 2:3;&#10;4 5:9;&#10;10 20:30;&#10;100:100;"
+              style="font-size: 13px; line-height: 1.6; font-family: 'JetBrains Mono', monospace;"></textarea>
+            
+            <div id="tc-bulk-preview" style="margin-top: 10px; display: none;">
+              <div class="tc-preview-badge" id="tc-preview-badge"></div>
+              <div class="tc-preview-list" id="tc-preview-list"></div>
+            </div>
+          </div>
+
+          <!-- Manual Rows Area -->
+          <div id="tc-manual-pane" style="display: none;">
+            <div id="testcase-list"></div>
+            <button class="btn btn-outline btn-sm" id="btn-add-testcase" type="button">+ Add test case</button>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div>
+            <label class="field-label" for="duration-select">Time limit</label>
+            <select class="select" id="duration-select">
+              <option value="5">5 minutes</option>
+              <option value="10">10 minutes</option>
+              <option value="15" selected>15 minutes</option>
+              <option value="20">20 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60">60 minutes</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="field-label">Allowed languages</label>
+            <div class="lang-toggle">
+              <label><input type="checkbox" id="lang-java" checked/> Java</label>
+              <label><input type="checkbox" id="lang-cpp" checked/> C++</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="error-text" id="create-error"></div>
+        <button class="btn btn-gold btn-block" id="btn-create-submit">Create room</button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════ JOIN VIEW ═══════════════════════ -->
+  <section class="view" id="view-join">
+    <button class="link-btn" id="btn-join-back">← Back to home</button>
+    <div class="divider"></div>
+
+    <div class="panel" style="max-width:440px; margin:0 auto;">
+      <div style="margin-bottom:24px;">
+        <span class="label">Match entry</span>
+        <h2 style="font-size:26px; font-weight:800; letter-spacing:-0.02em; margin-top:6px;">Join a room</h2>
+      </div>
+
+      <div class="form-grid">
+        <div>
+          <label class="field-label" for="join-code">Room code</label>
+          <input class="input mono" id="join-code" maxlength="5" placeholder="ABCDE"
+                 style="text-transform:uppercase; letter-spacing:0.18em; font-size:22px; font-weight:700; text-align:center;" autocomplete="off"/>
+        </div>
+
+        <div>
+          <label class="field-label" for="join-nickname">Your nickname</label>
+          <input class="input" id="join-nickname" maxlength="20" placeholder="e.g. Priya" autocomplete="off"/>
+        </div>
+
+        <div class="error-text" id="join-error"></div>
+        <button class="btn btn-mint btn-block" id="btn-join-submit">Join room</button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════ LOBBY VIEW ══════════════════════ -->
+  <section class="view" id="view-lobby">
+    <div class="lobby-layout">
+
+      <div class="panel">
+        <span class="label">Active room code</span>
+        <div class="room-code-display">
+          <span class="code" id="lobby-code">-----</span>
+          <button class="btn btn-outline btn-sm" id="btn-copy-code">Copy code</button>
+        </div>
+        <span class="label" style="display:block; margin-bottom:18px;">Share this code with your opponent</span>
+
+        <h3 id="lobby-problem-title" style="margin:20px 0 4px; font-size:19px; font-weight:700; letter-spacing:-0.01em;"></h3>
+        <span class="label" id="lobby-meta" style="display:block;"></span>
+
+        <div class="divider"></div>
+        <span class="label" style="margin-bottom:12px; display:block;">Players connected</span>
+        <div class="participant-list" id="lobby-participants"></div>
+
+        <div id="lobby-host-controls" style="display:none; margin-top:16px;">
+          <div class="error-text" id="lobby-error"></div>
+          <button class="btn btn-gold btn-block" id="btn-start-match">Start match</button>
+        </div>
+
+        <div id="lobby-guest-note" style="text-align:center; margin-top:16px;">
+          <span class="label" style="color:var(--text-mid);">Waiting for host to begin the match…</span>
+        </div>
+      </div>
+
+      <div class="panel panel-tight">
+        <span class="label" style="margin-bottom:14px; display:block;">Match rules</span>
+        <p style="color:var(--text-mid); font-size:13.5px; line-height:1.75;">
+          When the host triggers the start, the problem unlocks for all competitors simultaneously. Write your solution in Java or C++ and submit freely. The first participant to pass every test case takes instant victory. If the clock runs out, whoever cleared the most tests wins.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════ MATCH VIEW (3-PANE) ═════════════ -->
+  <section class="view" id="view-match">
+    <div class="match-layout">
+
+      <!-- ── PANE 1 (LEFT): Problem Panel ───────────────── -->
+      <div class="panel problem-panel">
+
+        <!-- Slim timer + opponent score strip -->
+        <div class="progress-strip">
+          <div>
+            <span class="label" style="display:block; margin-bottom:2px;">Time left</span>
+            <span class="timer-display" id="match-timer">--:--</span>
+          </div>
+          <div class="opp-score">
+            <span class="label">Opponent</span>
+            <span class="value" id="opp-score-display">—</span>
+          </div>
+        </div>
+
+        <div class="problem-header">
+          <h2 class="problem-title" id="match-title"></h2>
+          <span class="difficulty-tag easy" id="match-difficulty">Match</span>
+        </div>
+
+        <div class="problem-body" id="match-description"></div>
+
+        <div class="sample-block" id="match-sample" style="display:none;">
+          <div class="sample-section">
+            <span class="label">Sample input</span>
+            <pre id="sample-input"></pre>
+          </div>
+          <div class="sample-section">
+            <span class="label">Sample output</span>
+            <pre id="sample-output"></pre>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── PANE 2 (CENTER): Code Editor Panel ─────────── -->
+      <div class="panel editor-panel">
+
+        <div class="editor-header">
+          <span class="label">Code editor</span>
+          <select class="lang-select" id="editor-language" aria-label="Select coding language"></select>
+        </div>
+
+        <!-- CodeMirror attaches here, textarea serves as fallback -->
+        <textarea id="code-editor" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+
+        <div class="editor-footer">
+          <span class="submit-status" id="submit-status"></span>
+          <button class="btn btn-mint" id="btn-submit-code">Run &amp; submit</button>
+        </div>
+
+      </div>
+
+      <!-- ── PANE 3 (RIGHT): Test & Status Rail ─────────── -->
+      <div class="right-rail" id="right-rail">
+
+        <!-- Stat block score aggregate -->
+        <div class="score-header-card" id="score-header-card" style="display:none;">
+          <div class="score-main">
+            <span class="score-big" id="score-big">0</span>
+            <span class="score-denom" id="score-denom">/0</span>
+          </div>
+          <span class="label" id="score-label" style="margin-top:6px; display:block;">Passed</span>
+        </div>
+
+        <!-- Compile error card -->
+        <div class="compile-error-card" id="compile-error-card" style="display:none;">
+          <span class="label">Compile error</span>
+          <pre id="compile-error-log"></pre>
+        </div>
+
+        <!-- Individual test case cards (Memory-cards stat language) -->
+        <div id="tc-cards-list"></div>
+
+        <!-- Persistent Live Leaderboard Card -->
+        <div class="leaderboard-card" id="leaderboard-card">
+          <span class="label">Leaderboard</span>
+          <div id="match-leaderboard"></div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════ RESULT VIEW ═════════════════════ -->
+  <section class="view" id="view-result">
+    <div class="result-view">
+      <div class="result-inner">
+
+        <div class="result-badge" id="result-badge"></div>
+
+        <h1 class="result-title" id="result-title"></h1>
+        <p class="result-sub" id="result-sub"></p>
+
+        <div class="final-board panel panel-tight" id="final-board"></div>
+
+        <button class="btn btn-outline" id="btn-play-again">Back to home</button>
+
+      </div>
+    </div>
+  </section>
+
+</div><!-- /shell -->
+
+<div class="toast" id="toast" style="display:none;"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<!-- CodeMirror bundle with clike mode (Java & C++) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
